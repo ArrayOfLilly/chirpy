@@ -1,42 +1,32 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
-	"os"
+	"log"
 	)
 
-
-
-var ServeMux = http.NewServeMux()
-
-type Server struct {
-	Addr string
-	Handler http.Handler
-}
-
-func (s Server) ListenAndServe() {
-    http.ListenAndServe(s.Addr, s.Handler)
-}
-
-func getServer() Server {
-	return Server{
-		Addr: ":8080", 
-		Handler: ServeMux,
-	}
-}
-
 func main() {
-	if len(os.Args) > 1 {
-		fmt.Println("Error: too many arguments")
-		fmt.Println("Usage: chirpy")
-		return
+	const port = "8080"
+
+	// ServeMux is an HTTP request multiplexer. 
+	// It matches the URL of each incoming request against a list of registered patterns and 
+	// calls the handler for the pattern that most closely matches the URL.
+	mux := http.NewServeMux()
+
+	// A Server defines parameters for running an HTTP server. 
+	srv := &http.Server{
+		Addr:    ":" + port,
+		Handler: mux,
 	}
 
-	fmt.Printf("Server is starting...\n")
+	log.Printf("Serving on port: %s\n", port)
+	// logs: 2024/05/09 15:00:03 Serving on port: 8080
 
-	s := getServer()
-
-	s.ListenAndServe()
+	// ListenAndServe listens on the TCP network address srv.Addr and 
+	// then calls Serve to handle requests on incoming connections.
+	// Serve accepts incoming connections on the Listener l, 
+	// creating a new service goroutine for each. 
+	// The service goroutines read requests and then call srv.Handler to reply to them.
+	log.Fatal(srv.ListenAndServe())
 }
 
