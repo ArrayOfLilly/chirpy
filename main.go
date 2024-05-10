@@ -29,7 +29,7 @@ func main() {
 	// middlewareMetricsInc add the fileserverHit coumt functionality
 	mux.Handle("/app/*", apicfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))))
 
-	mux.HandleFunc("POST /api/validate_chirp", handlerValidateChirp)
+	mux.HandleFunc("POST /api/validate_chirp", handlerChirpsValidate)
 
 	// readiness endpoint to shpow server status for external 
 	mux.HandleFunc("GET /api/healthz", handlerReadiness)
