@@ -29,14 +29,16 @@ func main() {
 	// middlewareMetricsInc add the fileserverHit coumt functionality
 	mux.Handle("/app/*", apicfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))))
 
+	mux.HandleFunc("POST /api/validate_chirp", handlerValidateChirp)
+
 	// readiness endpoint to shpow server status for external 
-	mux.HandleFunc("GET /healthz", handlerReadiness)
+	mux.HandleFunc("GET /api/healthz", handlerReadiness)
 
 	// write and send the metrics
-	mux.HandleFunc("GET /metrics", apicfg.handlerMetrics)
+	mux.HandleFunc("GET /admin/metrics", apicfg.handlerMetrics)
 
 	// reset the counter
-	mux.HandleFunc("/reset", apicfg.handlerReset)
+	mux.HandleFunc("/api/reset", apicfg.handlerReset)
 
 	// A Server defines parameters for running an HTTP server. 
 	srv := &http.Server{
