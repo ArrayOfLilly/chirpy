@@ -34,21 +34,23 @@ type DB struct {
 // 	},
 // 	"users":
 // 	{
-// 		"1":
+// 		"example1@mail.com":
 // 		{
 // 			"id": 1,
 // 			"eamil": "example1@mail.com"
+//          "password": "passwordhash1"
 // 		},
-// 		"2": 
+// 		"example2@mail.com": 
 // 		{
 // 			"id": 2,
 // 			"email": "example2@mail.com"
+//          "password": "passwordhash2"
 // 		},
 // 	},
 // }
 type DBStructure struct {
 	Chirps map[int]Chirp `json:"chirps"`
-	Users map[int]User `json:"users"`
+	Users map[string]User `json:"users"`
 }
 
 // NewDB creates a new database connection.

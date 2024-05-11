@@ -1,0 +1,15 @@
+{
+	"chirps": {
+		"1": { "id": 1, "body": "I had something interesting for breakfast" },
+		"2": { "id": 2, "body": "What about second breakfast?" },
+		"3": { "id": 3, "body": "Supper? Dinner? Do you know about those?" },
+		"4": { "id": 4, "body": "Sharbert! I hear Mastodon is better than Chirpy. **** I need to migrate" }
+	},
+	"users": {
+		"saul@bettercall.com": {
+			"id": 1,
+			"email": "saul@bettercall.com",
+			"password": "$2a$04$03Luto/8K4xMur5oya4c.uI6kxm5EiXUdQYBcsAs0UfNukJoCV4Fq"
+		}
+	}
+}

@@ -4,12 +4,15 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/mail"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // Structure of a "Chirp" (limited length message)
 type User struct {
 	ID   int    `json:"id"`
 	Email string `json:"email"`
+	Password string `json:"password"`
 }
 
 // handlerUsersCreate handles the creation of a new user based on the request body.
@@ -26,6 +29,7 @@ func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request)
 	// represents the parameters expected in the request body.
 	type parameters struct {
 		Email string `json:"email"`
+		Password string `json:"password"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -42,7 +46,13 @@ func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	user, err := cfg.DB.CreateUser(string(validEmail.Address))
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(params.Password), 4)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest,  err.Error())
+		return
+	}
+	
+	user, err := cfg.DB.CreateUser(string(validEmail.Address), string(passwordHash))
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create user")
 		return

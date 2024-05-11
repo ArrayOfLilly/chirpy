@@ -87,7 +87,7 @@ func (db *DB) GetChirps() ([]Chirp, error) {
 func (db *DB) createDB() error {
 	dbStructure := DBStructure{
 		Chirps: map[int]Chirp{},
-		Users: map[int]User{},
+		Users: map[string]User{},
 	}
 	return db.writeDB(dbStructure)
 }
