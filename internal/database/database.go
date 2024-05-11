@@ -51,19 +51,6 @@ type DBStructure struct {
 	Users map[int]User `json:"users"`
 }
 
-// Structure of a "Chirp" (limited length message) as a databasae entry
-type Chirp struct {
-	ID   int    `json:"id"`
-	Body string `json:"body"`
-}
-
-// Structure of a "User" as a databasae entry
-type User struct {
-	ID   int    `json:"id"`
-	Email string `json:"email"`
-}
-
-
 // NewDB creates a new database connection.
 //
 // It takes a path string as a parameter, which specifies the path to the database file.
@@ -75,115 +62,6 @@ func NewDB(path string) (*DB, error) {
 	}
 	err := db.ensureDB()
 	return db, err
-}
-
-// CreateUser creates a new user in the database.
-//
-// It takes an email string as a parameter, which specifies the email address of the user.
-// It returns a User struct and an error. 
-// If there is an error while loading the database or writing to the database, or the specified email is invalid 
-// it returns an empty User struct and the corresponding error. Otherwise, it returns the created user and a nil error.
-func (db *DB) CreateUser(email string) (User, error) {
-	dbStructure, err := db.loadDB()
-	if err != nil {
-		return User{}, err
-	}
-
-	id := len(dbStructure.Users) + 1
-	
-	user := User{
-		ID:   id,
-		Email: email,
-	}
-	dbStructure.Users[id] = user
-
-	err = db.writeDB(dbStructure)
-	if err != nil {
-		return User{}, err
-	}
-
-	return user, nil
-}
-
-// CreateChirp creates a new chirp in the database.
-//
-// It takes a body string as a parameter, which represents the content of the chirp.
-// It returns a Chirp struct and an error. 
-// If there is an error while loading the database or writing to the database, 
-// it returns an empty Chirp struct and the corresponding error. 
-// Otherwise, it returns the created chirp and a nil error.
-func (db *DB) CreateChirp(body string) (Chirp, error) {
-	dbStructure, err := db.loadDB()
-	if err != nil {
-		return Chirp{}, err
-	}
-
-	id := len(dbStructure.Chirps) + 1
-	chirp := Chirp{
-		ID:   id,
-		Body: body,
-	}
-	dbStructure.Chirps[id] = chirp
-
-	err = db.writeDB(dbStructure)
-	if err != nil {
-		return Chirp{}, err
-	}
-
-	return chirp, nil
-}
-
-// GetChirp retrieves a Chirp from the database based on its ID.
-//
-// Parameters:
-// - id: the ID of the Chirp to retrieve.
-//
-// Returns:
-// - Chirp: the Chirp with the given ID, or an empty Chirp if it does not exist.
-// - error: an error if there was a problem loading the database or if the Chirp does not exist.
-func (db *DB) GetChirp(id int) (Chirp, error) {
-	dbStructure, err := db.loadDB()
-	if err != nil {
-		return Chirp{}, err
-	}
-
-	chirp, ok := dbStructure.Chirps[id]
-	if !ok {
-		return Chirp{}, os.ErrNotExist
-	}
-
-	return chirp, nil
-}
-
-
-// GetChirps retrieves all the chirps from the database.
-//
-// It returns a slice of Chirp structs and an error if there was a problem loading the database.
-// The slice contains all the chirps stored in the database.
-func (db *DB) GetChirps() ([]Chirp, error) {
-	dbStructure, err := db.loadDB()
-	if err != nil {
-		return nil, err
-	}
-
-	chirps := make([]Chirp, 0, len(dbStructure.Chirps))
-	for _, chirp := range dbStructure.Chirps {
-		chirps = append(chirps, chirp)
-	}
-
-	return chirps, nil
-}
-
-// createDB creates a new database structure and writes it to the database file.
-//
-// No parameters.
-// Returns an error if there was an issue writing to the database.
-func (db *DB) createDB() error {
-	dbStructure := DBStructure{
-		Chirps: map[int]Chirp{},
-		Users: map[int]User{},
-	}
-	return db.writeDB(dbStructure)
 }
 
 // ensureDB checks if the database file exists and creates it if it doesn't.
