@@ -1,23 +1,23 @@
 package database
 
 import (
-	"os"
+	"errors"
 )
 
-// Structure of a "User" as a databasae entry
 type User struct {
 	ID   int    `json:"id"`
 	Email string `json:"email"`
-	Password string `json:"password"`
+	HashedPassword string `json:"hashed_password"`
 }
 
-// CreateUser creates a new user in the database.
-//
-// It takes an email and password string as a parameter, which specifies the email address and password of the user.
-// It returns a User struct and an error. 
-// If there is an error while loading the database or writing to the database, or the specified email is invalid 
-// it returns an empty User struct and the corresponding error. Otherwise, it returns the created user and a nil error.
-func (db *DB) CreateUser(email string, password string) (User, error) {
+var ErrAlreadyExists = errors.New("already exists")
+
+func (db *DB) CreateUser(email string, hashedPassword string) (User, error) {
+	_, err := db.GetUserByEmail(email)
+	if !errors.Is(err, ErrNotExist) {
+		return User{}, ErrAlreadyExists
+	}
+
 	dbStructure, err := db.loadDB()
 	if err != nil {
 		return User{}, err
@@ -28,9 +28,9 @@ func (db *DB) CreateUser(email string, password string) (User, error) {
 	user := User{
 		ID:   id,
 		Email: email,
-		Password: password,
+		HashedPassword: hashedPassword,
 	}
-	dbStructure.Users[email] = user
+	dbStructure.Users[id] = user
 
 	err = db.writeDB(dbStructure)
 	if err != nil {
@@ -40,21 +40,33 @@ func (db *DB) CreateUser(email string, password string) (User, error) {
 	return user, nil
 }
 
-
-func (db *DB) GetUser(email string) (User, error) {
+func (db *DB) GetUserByEmail(email string) (User, error) {
 	dbStructure, err := db.loadDB()
 	if err != nil {
 		return User{}, err
 	}
 
-	user, ok := dbStructure.Users[email]
-	if !ok {
-		return User{}, os.ErrNotExist
+	for _, user := range dbStructure.Users {
+		if user.Email == email {
+			return user, nil
+		}
 	}
 
-	return User{
-		ID: user.ID,
-		Email: user.Email,
-		Password: user.Password,
-	}, nil
+	return User{}, ErrNotExist
 }
+
+func (db *DB) GetUser(id int) (User, error) {
+	dbStructure, err := db.loadDB()
+	if err != nil {
+		return User{}, err
+	}
+
+	user, ok := dbStructure.Users[id]
+	if !ok {
+		return User{}, ErrNotExist
+	}
+
+	return user, nil
+}
+
+

@@ -1,2 +1,3 @@
 # chirpy
-twitter clone
+
+REST API twitter clone

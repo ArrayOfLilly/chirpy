@@ -2,29 +2,21 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/mail"
 
-	"golang.org/x/crypto/bcrypt"
+	"github.com/ArrayOfLilly/chirpy/internal/auth"
+	"github.com/ArrayOfLilly/chirpy/internal/database"
 )
 
-// Structure of a "Chirp" (limited length message)
 type User struct {
 	ID   int    `json:"id"`
 	Email string `json:"email"`
 	Password string `json:"password"`
 }
 
-// handlerUsersCreate handles the creation of a new user based on the request body.
-//
-// It decodes the request body into parameters, validates the email address, and creates a user in the database.
-// It returns the created user in the response.
-//
-// Parameters:
-// - w http.ResponseWriter: the response writer to write the HTTP response to.
-// - r *http.Request: the HTTP request.
-//
-// Return type: None.
+
 func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request) {
 	// represents the parameters expected in the request body.
 	type parameters struct {
@@ -46,14 +38,18 @@ func (cfg *apiConfig) handlerUsersCreate(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(params.Password), 4)
+	hashedPassword, err := auth.HashPassword(params.Password)
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest,  err.Error())
+		respondWithError(w, http.StatusInternalServerError, "Couldn't hash password")
 		return
 	}
-	
-	user, err := cfg.DB.CreateUser(string(validEmail.Address), string(passwordHash))
+
+	user, err := cfg.DB.CreateUser(string(validEmail.Address), hashedPassword)
 	if err != nil {
+		if errors.Is(err, database.ErrAlreadyExists) {
+			respondWithError(w, http.StatusConflict, "User already exists")
+			return
+		}
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create user")
 		return
 	}
