@@ -7,11 +7,28 @@ import (
 	"github.com/ArrayOfLilly/chirpy/internal/database"
 )
 
+// configuration object for the API
 type apiConfig struct {
 	fileserverHits int
 	DB             *database.DB
 }
 
+// main is the entry point of the Go program.
+//
+// It initializes the necessary configurations and sets up the HTTP server.
+// The function reads the database file "database.json" and creates a new database connection.
+// It creates an instance of the apiConfig struct with the initial number of fileserver hits and the database connection.
+// It creates a new HTTP request multiplexer and sets up the file server handler with the middleware for metrics increment.
+// The file server handler is registered to handle requests with the "/app/*" pattern.
+// The function registers various API handlers with the multiplexer.
+// The handlerReadiness function is registered to handle "GET /api/healthz" requests.
+// The handlerReset function of the apiConfig struct is registered to handle "GET /api/reset" requests.
+// The handlerChirpsCreate function of the apiConfig struct is registered to handle "POST /api/chirps" requests.
+// The handlerChirpsRetrieve function of the apiConfig struct is registered to handle "GET /api/chirps" requests.
+// The handlerMetrics function of the apiConfig struct is registered to handle "GET /admin/metrics" requests.
+// The function creates an HTTP server with the specified address and the multiplexer as the handler.
+// It logs the file server root and the listening port.
+// Finally, it starts the server and logs any errors that occur.
 func main() {
 	const filepathRoot = "."
 	const port = "8080"
