@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 
@@ -19,6 +20,15 @@ func main() {
 	db, err := database.NewDB("database.json")
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	dbg := flag.Bool("debug", false, "Enable debug mode")
+	flag.Parse()
+	if dbg != nil && *dbg {
+		err := db.ResetDB()
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	apiCfg := apiConfig{
