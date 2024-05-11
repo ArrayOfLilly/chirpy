@@ -3,10 +3,13 @@ package main
 import (
 	"log"
 	"net/http"
+
+	"github.com/ArrayOfLilly/chirpy/internal/database"
 )
 
 // a struct that will hold any stateful, in-memory data we'll need to keep track of
 	type apiConfig struct {
+		DB *database.DB
 		fileserverHits int
 	}
 
@@ -15,7 +18,8 @@ func main() {
 	const port = "8080"
 
 	// initializing apiConfig
-	apicfg := &apiConfig{
+	cfg := &apiConfig{
+
 		fileserverHits: 0,
 	}
 
@@ -27,18 +31,21 @@ func main() {
 	// Handle add the handler (http.FileServer([path])) to the specified request ("/")
 	// StripPrefix for set alternate route to the request
 	// middlewareMetricsInc add the fileserverHit coumt functionality
-	mux.Handle("/app/*", apicfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))))
+	mux.Handle("/app/*", cfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot)))))
 
 	mux.HandleFunc("POST /api/validate_chirp", handlerChirpsValidate)
+	// mux.HandleFunc("POST /api/chirps", handlerChirpsCreate)
+	mux.HandleFunc("GET /api/chirps", cfg.handlerChirpsRead)
+
 
 	// readiness endpoint to shpow server status for external 
 	mux.HandleFunc("GET /api/healthz", handlerReadiness)
 
 	// write and send the metrics
-	mux.HandleFunc("GET /admin/metrics", apicfg.handlerMetrics)
+	mux.HandleFunc("GET /admin/metrics", cfg.handlerMetrics)
 
 	// reset the counter
-	mux.HandleFunc("/api/reset", apicfg.handlerReset)
+	mux.HandleFunc("/api/reset", cfg.handlerReset)
 
 	// A Server defines parameters for running an HTTP server. 
 	srv := &http.Server{
