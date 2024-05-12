@@ -14,6 +14,7 @@ type apiConfig struct {
 	fileserverHits int
 	DB *database.DB
 	jwtSecret string
+	polkaApiKey string
 }
 
 func main() {
@@ -34,13 +35,25 @@ func main() {
 		}
 	}
 
-	godotenv.Load()
+	err = godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Fatal("JWT_SECRET environment variable is not set")
+	}
+	polkaApiKey := os.Getenv("POLKA_API_KEY")
+	if polkaApiKey == "" {
+		log.Fatal("POLKA_API_KEY environment variable is not set")
+	}
+
 
 	apiCfg := apiConfig{
 		fileserverHits: 0,
 		DB: db,
 		jwtSecret: jwtSecret,
+		polkaApiKey: polkaApiKey,
 	}
 
 	mux := http.NewServeMux()
@@ -59,8 +72,12 @@ func main() {
 	mux.HandleFunc("/api/revoke", apiCfg.handlerRevoke)
 
 	mux.HandleFunc("POST /api/chirps", apiCfg.handlerChirpsCreate)
-	mux.HandleFunc("GET /api/chirps", apiCfg.handlerChirpsRetrieve)
+	mux.HandleFunc("GET /api/chirps/", apiCfg.handlerChirpsRetrieve)
 	mux.HandleFunc("GET /api/chirps/{chirpID}", apiCfg.handlerChirpGet)
+	mux.HandleFunc("DELETE /api/chirps/{chirpID}", apiCfg.handlerChirpsDelete)
+
+	mux.HandleFunc("POST /api/polka/webhooks", apiCfg.handlerPolkaSendEvent)
+
 
 	srv := &http.Server{
 		Addr:    ":" + port,

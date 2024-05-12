@@ -22,6 +22,7 @@ func (cfg *apiConfig) handlerChirpGet(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, Chirp{
 		ID:   dbChirp.ID,
 		Body: dbChirp.Body,
+		AuthorID: dbChirp.AuthorID,
 	})
 }
 
@@ -32,11 +33,33 @@ func (cfg *apiConfig) handlerChirpsRetrieve(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	authorIdStr := r.URL.Query().Get("author_id")
+	if authorIdStr != ""{
+		authorId, err := strconv.Atoi(authorIdStr)
+		if err != nil {
+			respondWithError(w, http.StatusInternalServerError, "Couldn't parse authorID ID")
+			return
+		}
+		chirps := []Chirp{}
+		for _, dbChirp := range dbChirps {
+			if dbChirp.AuthorID == authorId {
+				chirps = append(chirps, Chirp{
+				ID:   dbChirp.ID,
+				Body: dbChirp.Body,
+				AuthorID: dbChirp.AuthorID,
+				})
+			}
+		}
+		respondWithJSON(w, http.StatusOK, chirps)
+		return
+	}
+	
 	chirps := []Chirp{}
 	for _, dbChirp := range dbChirps {
 		chirps = append(chirps, Chirp{
 			ID:   dbChirp.ID,
 			Body: dbChirp.Body,
+			AuthorID: dbChirp.AuthorID,
 		})
 	}
 
