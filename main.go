@@ -4,13 +4,16 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/ArrayOfLilly/chirpy/internal/database"
+	"github.com/joho/godotenv"
 )
 
 type apiConfig struct {
 	fileserverHits int
-	DB             *database.DB
+	DB *database.DB
+	jwtSecret string
 }
 
 func main() {
@@ -31,9 +34,13 @@ func main() {
 		}
 	}
 
+	godotenv.Load()
+	jwtSecret := os.Getenv("JWT_SECRET")
+
 	apiCfg := apiConfig{
 		fileserverHits: 0,
-		DB:             db,
+		DB: db,
+		jwtSecret: jwtSecret,
 	}
 
 	mux := http.NewServeMux()
@@ -41,15 +48,19 @@ func main() {
 	mux.Handle("/app/*", fsHandler)
 
 	mux.HandleFunc("GET /api/healthz", handlerReadiness)
+	mux.HandleFunc("GET /admin/metrics", apiCfg.handlerMetrics)
 	mux.HandleFunc("GET /api/reset", apiCfg.handlerReset)
+
+	mux.HandleFunc("POST /api/users", apiCfg.handlerUsersCreate)
+	mux.HandleFunc("PUT /api/users", apiCfg.handlerUsersUpdate)
+
+	mux.HandleFunc("POST /api/login", apiCfg.handlerLogin)
+	mux.HandleFunc("POST /api/refresh", apiCfg.handlerRefresh)
+	mux.HandleFunc("/api/revoke", apiCfg.handlerRevoke)
+
 	mux.HandleFunc("POST /api/chirps", apiCfg.handlerChirpsCreate)
 	mux.HandleFunc("GET /api/chirps", apiCfg.handlerChirpsRetrieve)
 	mux.HandleFunc("GET /api/chirps/{chirpID}", apiCfg.handlerChirpGet)
-	mux.HandleFunc("POST /api/users", apiCfg.handlerUsersCreate)
-	mux.HandleFunc("POST /api/login", apiCfg.handlerAutentication)
-
-
-	mux.HandleFunc("GET /admin/metrics", apiCfg.handlerMetrics)
 
 	srv := &http.Server{
 		Addr:    ":" + port,
